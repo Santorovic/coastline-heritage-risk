@@ -1,0 +1,32 @@
+# ---- secrets: never commit them
+.env
+*.key
+**/API_KEY.py
+
+# ---- local configuration and outputs
+config/local.yaml
+results/
+_preview/
+
+# ---- data too large for Git (archived on Zenodo, see data/README.md)
+data/factors/
+data/raw/
+*.tif
+*.tif.aux.xml
+*.gpkg
+*.gpkg-journal
+
+# ---- Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.pytest_cache/
+venv/
+.venv/
+
+# ---- notebooks and editors
+.ipynb_checkpoints/
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db

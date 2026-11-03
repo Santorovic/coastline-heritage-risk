@@ -1,0 +1,35 @@
+id,name,hi,hi_radius_m,hi_class,hi_label,vi_norm,vi_class,vi_label,vi_resc,reviews,e_norm,e_class,e_label,r,r_class,r_label
+1,Ledra City Archaeological Museum,0.2717,125,1,Very Low,0.3571,1,Low,1,24.0000,0.3031,2,Low,2,1,Low
+2,Malloura Archaeological Site,0.2476,125,1,Very Low,0.3571,1,Low,1,22.0000,0.2953,2,Low,2,1,Low
+3,Archaeological Site of Tamassos,0.3829,125,2,Low,0.4286,1,Low,1,89.0000,0.4238,3,Medium,6,1,Low
+4,Idalion,0.4830,125,3,Medium,0.5714,2,Medium,3,58.0000,0.3840,3,Medium,27,2,Medium
+5,Archaeological Site of Palaion Demarcheion,0.2765,125,1,Very Low,0.4286,1,Low,1,189.0000,0.4941,3,Medium,3,1,Low
+6,Ancient Kition,0.3255,125,2,Low,0.7143,3,High,5,728.0000,0.6208,4,High,40,2,Medium
+7,Maroni Vournes,0.4610,125,3,Medium,0.7143,3,High,5,1.0000,0.0653,1,Very Low,15,1,Low
+8,Amathus,0.7670,125,5,Very High,0.8571,3,High,5,1561.0000,0.6926,4,High,100,3,High
+9,Kourion,0.4768,125,3,Medium,0.5714,2,Medium,3,9571.0000,0.8633,5,Very High,45,2,Medium
+10,South Mathiatis Mine Strongylos,0.2786,125,1,Very Low,0.7857,3,High,5,14.0000,0.2550,2,Low,10,1,Low
+11,Kalavasos Ayios Dhimitrios,0.5214,125,3,Medium,0.6429,2,Medium,3,236.0000,0.5150,3,Medium,27,2,Medium
+12,Choirokoitia (Khirokitia),0.7198,125,5,Very High,0.4286,1,Low,1,1824.0000,0.7072,4,High,20,1,Low
+13,Erimi Laonin tou Porakou,0.6617,125,4,High,0.7143,3,High,5,8.0000,0.2069,2,Low,40,2,Medium
+14,Alassa archaeological site,0.5555,125,4,High,0.7143,3,High,5,11.0000,0.2340,2,Low,40,2,Medium
+15,"Erimi-Pitharka, Cave",0.5231,125,3,Medium,0.6429,2,Medium,3,3.0000,0.1306,1,Very Low,9,1,Low
+16,Sanctuary of Apollo,0.4144,125,2,Low,0.5000,1,Low,1,829.0000,0.6330,4,High,8,1,Low
+17,Chrysopolitissa complex,0.6317,125,4,High,0.7857,3,High,5,4067.0000,0.7827,4,High,80,3,High
+18,Anogyra-Vlou Archeological Site,0.6003,125,4,High,0.5000,1,Low,1,4.0000,0.1516,2,Low,8,1,Low
+19,Old Catacombs (south) Phafos,0.5206,125,3,Medium,0.7143,3,High,5,1127.0000,0.6619,4,High,60,3,High
+20,Tombs of the Kings,0.3864,125,2,Low,0.5714,2,Medium,3,24465.0000,0.9517,5,Very High,30,2,Medium
+21,Marion Ruins,0.5837,125,4,High,0.7143,3,High,5,64.0000,0.3931,3,Medium,60,3,High
+22,Archeological site of Paralimni-Nissia,0.5054,125,3,Medium,0.6429,2,Medium,3,115.0000,0.4477,3,Medium,27,2,Medium
+23,Nea Pafos (Kato Pafos),0.3734,125,2,Low,0.4286,1,Low,1,40875.0000,1.0000,5,Very High,10,1,Low
+24,Kisonerga-Mosfilia Archaeological Site,0.5831,125,4,High,0.5000,1,Low,1,26.0000,0.3104,2,Low,8,1,Low
+25,The Necropolis at Meletis Forest,0.5778,125,4,High,0.8571,3,High,5,22.0000,0.2953,2,Low,40,2,Medium
+26,Yeroskipou,0.4017,125,2,Low,0.7857,3,High,5,40.0000,0.3497,3,Medium,30,2,Medium
+27,Marcello Hill (Kouklia),0.5289,125,3,Medium,0.7143,3,High,5,2.0000,0.1035,1,Very Low,15,1,Low
+28,Agios Georgios Ancient Basilicas,0.6236,125,4,High,0.6429,2,Medium,3,310.0000,0.5406,3,Medium,36,2,Medium
+29,Lempa-Lakkoi Archaeological Site,0.5870,125,4,High,0.7857,3,High,5,231.0000,0.5130,3,Medium,60,3,High
+30,Palaipafos (Kouklia),0.4442,125,2,Low,0.4286,1,Low,1,1671.0000,0.6990,4,High,8,1,Low
+31,Dromolaxia - Byzakia Excavation Site,0.2694,125,1,Very Low,0.7857,3,High,5,12.0000,0.2416,2,Low,10,1,Low
+32,Maa-Palaeokastro,0.5294,125,3,Medium,0.7143,3,High,5,162.0000,0.4797,3,Medium,45,2,Medium
+33,Makronissos Tombs (Agia Napa),0.2370,125,1,Very Low,0.7857,3,High,5,329.0000,0.5461,4,High,20,1,Low
+34,Geronisos,0.3516,125,2,Low,0.8571,3,High,5,15.0000,0.2611,2,Low,20,1,Low

@@ -1,0 +1,5 @@
+test,rho_hi,hi_class_changes,rho_r,r_class_changes,n_low_medium_high,high_sites,weights_without_cpi
+main,1.000,0,1.000,0,"[17, 12, 5]",Amathus;Chrysopolitissa complex;Old Catacombs (south) Phafos;Marion Ruins;Lempa-Lakkoi Archaeological Site,"{'SAI': 0.163, 'BUI': 0.146, 'LSI': 0.275, 'FFI': 0.054, 'RNI': 0.104, 'SLRI': 0.207, 'FHI': 0.051}"
+no_cpi,0.923,17,0.978,8,"[11, 16, 7]",Ancient Kition;Amathus;Erimi Laonin tou Porakou;Chrysopolitissa complex;Old Catacombs (south) Phafos;Marion Ruins;Lempa-Lakkoi Archaeological Site,"{'SAI': 0.163, 'BUI': 0.146, 'LSI': 0.275, 'FFI': 0.054, 'RNI': 0.104, 'SLRI': 0.207, 'FHI': 0.051}"
+no_cpi_dtc,0.923,17,0.900,10,"[13, 14, 7]",Ancient Kition;Amathus;Erimi Laonin tou Porakou;Chrysopolitissa complex;Old Catacombs (south) Phafos;Marion Ruins;Lempa-Lakkoi Archaeological Site,"{'SAI': 0.163, 'BUI': 0.146, 'LSI': 0.275, 'FFI': 0.054, 'RNI': 0.104, 'SLRI': 0.207, 'FHI': 0.051}"
+no_cpi_dtc_elevation,0.923,17,0.788,13,"[11, 19, 4]",Amathus;Erimi Laonin tou Porakou;Chrysopolitissa complex;Lempa-Lakkoi Archaeological Site,"{'SAI': 0.163, 'BUI': 0.146, 'LSI': 0.275, 'FFI': 0.054, 'RNI': 0.104, 'SLRI': 0.207, 'FHI': 0.051}"

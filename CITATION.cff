@@ -1,0 +1,23 @@
+cff-version: 1.2.0
+message: "If you use this software, please cite the article and the software as below."
+title: "COASTLINE: data-driven multi-hazard risk framework for coastal archaeological heritage"
+version: 1.0.0
+date-released: 2026-11-03
+license: MIT
+type: software
+authors:
+  - family-names: Santoro
+    given-names: Pietro Marco
+    affiliation: "Cyprus University of Technology"
+# doi: 10.5281/zenodo.XXXXXXX      <- add the Zenodo DOI after the first release
+repository-code: "https://github.com/<github-user>/coastline-heritage-risk"
+keywords: [cultural heritage, multi-hazard risk, remote sensing, GIS, Cyprus, cascade weighting]
+preferred-citation:
+  type: article
+  title: "A data-driven multi-hazard risk framework based on open geospatial datasets for coastal heritage: a case study of 34 sites in Cyprus"
+  authors:
+    - family-names: Santoro
+      given-names: Pietro Marco
+  journal: "Open Research Europe"
+  year: 2026
+  notes: "Under review. Complete the author list, volume and DOI on publication."

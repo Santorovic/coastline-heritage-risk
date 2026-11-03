@@ -1,0 +1,18 @@
+# Exact versions of the environment in which the results of the article were
+# reproduced (tests/test_reproduce_article.py passes). Python 3.10.
+# Install with:  pip install -r requirements.txt  then  pip install -e .
+numpy==2.2.6
+pandas==2.3.3
+geopandas==1.1.4
+pyogrio==0.13.0
+rasterio==1.4.4
+shapely==2.1.2
+pyproj==3.7.1
+affine==3.0.1
+scipy==1.15.3
+scikit-learn==1.7.2
+scikit-image==0.25.2
+matplotlib==3.10.9
+PyYAML==6.0.3
+python-dotenv==1.0.1
+pytest==8.3.3

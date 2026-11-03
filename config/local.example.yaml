@@ -1,0 +1,12 @@
+# Copy to config/local.yaml (ignored by Git) and override only what differs
+# on your computer. Paths can be absolute.
+#
+# Example: use the factor rasters where they already are, instead of data/factors/
+#
+# inputs:
+#   factors:
+#     SAI: C:/Users/me/COAST/Processed/Indices/Tectonic/Tectonic_aligned.tif
+#     BUI: C:/Users/me/COAST/Processed/Indices/Urban/Urban_aligned.tif
+#   dem: C:/Users/me/COAST/Raster/cy_DEMs/cy_SRTMGL1_30m.tif
+#
+# results_dir: D:/coastline-results

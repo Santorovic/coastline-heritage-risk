@@ -1,0 +1,38 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "coastline"
+version = "1.0.0"
+description = "Data-driven multi-hazard risk framework for coastal archaeological heritage (COASTLINE, Cyprus)"
+readme = "README.md"
+license = { file = "LICENSE" }
+authors = [{ name = "Pietro Marco Santoro" }]
+requires-python = ">=3.10"
+dependencies = [
+    "numpy>=1.26",
+    "pandas>=2.0",
+    "geopandas>=1.0",
+    "rasterio>=1.3",
+    "shapely>=2.0",
+    "pyproj>=3.6",
+    "scipy>=1.11",
+    "scikit-learn>=1.3",
+    "scikit-image>=0.22",
+    "matplotlib>=3.8",
+    "pyyaml>=6.0",
+    "python-dotenv>=1.0",
+]
+
+[project.optional-dependencies]
+postgis = ["sqlalchemy>=2.0", "psycopg2-binary>=2.9"]   # scripts/export_postgis_layers.py
+google = ["googlemaps>=4.10"]                            # scripts/collect_google_reviews.py
+dev = ["pytest>=8"]
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["src"]
