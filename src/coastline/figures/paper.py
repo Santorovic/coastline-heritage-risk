@@ -43,7 +43,7 @@ CFG = load_config()
 FIG_DIR = CFG.results_dir / "figures"
 UTM = CFG.crs
 ISLAND_BOX = (410000, 3800000, 670000, 3980000)      # Cyprus in UTM 36N (xmin, ymin, xmax, ymax)
-INCLUDE_MEAN_RANK = False    # mean-rank aggregation in fig9: off
+INCLUDE_MEAN_RANK = True     # mean-rank aggregation in fig9: on
 
 
 def result(*parts):
@@ -61,6 +61,7 @@ CLASS3 = {1: "#1B9E77", 2: "#F2C12E", 3: "#D62F25"}
 LABEL3 = {1: "Low", 2: "Medium", 3: "High"}
 CLASS5 = {1: "#1B9E77", 2: "#A6D96A", 3: "#F2C12E", 4: "#F58A2E", 5: "#D62F25"}
 LABEL5 = {1: "Very Low", 2: "Low", 3: "Medium", 4: "High", 5: "Very High"}
+RISK_WORD = "Risk"   # single switch for the class wording ("Risk" or "Priority"); decision pending
 EDGE = "#333333"
 GREY = "#8C8C8C"
 LAND = "#F1F1EF"
@@ -282,91 +283,106 @@ def legend_handles(palette, labels, sizes, counts=None, title=None):
 # ============================================================================ FIG 2: workflow
 def fig2():
     set_style()
-    fig = plt.figure(figsize=(W_FULL, 12.4 * CM))
+    bh, pitch, n_rows = 10.0, 12.6, 7           # box height, row pitch (units of 0.16 cm), grid rows
+    ri_h = 7.0
+    row_last_bottom = 1.5 + ri_h + 5.5 + ri_h + 4.5     # leaves room for the two RI boxes under the grid
+    top0 = row_last_bottom + bh + (n_rows - 1) * pitch   # top of the first row
+    hdr_y = top0 + 2.6                                    # header band
+    hu = hdr_y + 5.0 + 2.0                                # figure height in units (1 unit = 0.16 cm)
+    fig = plt.figure(figsize=(W_FULL, hu * 0.16 * CM))
     ax = fig.add_axes([0, 0, 1, 1])
     ax.set_xlim(0, 100)
-    ax.set_ylim(0, 76)
+    ax.set_ylim(0, hu)
     ax.axis("off")
-    dark = {"H": "#4D4D4D", "V": "#4D4D4D", "E": "#4D4D4D", "R": "#4D4D4D", "S": "#4D4D4D"}
-    tint = {"H": "#F2F2F2", "V": "#F2F2F2", "E": "#F2F2F2", "R": "#E4E4E4", "S": "#FFFFFF"}
- 
-    def rbox(x, y, w, h, fc, ec=EDGE, lw=0.6, ls="-", z=2):
+    dark, tint = "#4D4D4D", {"I": "#F2F2F2", "R": "#E4E4E4", "S": "#FFFFFF"}
+
+    def rbox(x, y, w, h, fc, ls="-", lw=0.7):
         ax.add_patch(FancyBboxPatch((x, y), w, h, boxstyle="round,pad=0,rounding_size=0.9",
-                                    fc=fc, ec=ec, lw=lw, ls=ls, zorder=z))
- 
-    def stage(x, y, w, h, key, title, detail):
-        rbox(x, y, w, h, tint[key], ec=dark[key], lw=0.7)
-        ax.text(x + w / 2, y + h - 2.7, title, ha="center", va="center", fontsize=6.9, fontweight="bold", zorder=3)
-        ax.text(x + w / 2, y + (h - 3.0) / 2, detail, ha="center", va="center", fontsize=6.2, zorder=3, linespacing=1.3)
- 
+                                    fc=fc, ec=dark, lw=lw, ls=ls, zorder=2))
+
+    def stage(x, y, w, h, title, detail):
+        rbox(x, y, w, h, tint["I"])
+        if detail:
+            ax.text(x + w / 2, y + h - 2.7, title, ha="center", va="center", fontsize=6.9, fontweight="bold", zorder=3)
+            ax.text(x + w / 2, y + (h - 3.0) / 2, detail, ha="center", va="center", fontsize=6.0, zorder=3, linespacing=1.3)
+        else:
+            ax.text(x + w / 2, y + h / 2, title, ha="center", va="center", fontsize=6.6, fontweight="bold", zorder=3, linespacing=1.3)
+
     def arrow(x0, y0, x1, y1, ls="-", color=EDGE):
         ax.annotate("", xy=(x1, y1), xytext=(x0, y0),
                     arrowprops=dict(arrowstyle="-|>", color=color, lw=0.8, mutation_scale=7, linestyle=ls,
                                     shrinkA=0, shrinkB=0), zorder=1)
- 
-    cw, bh = 21.0, 11.0
+
+    cw = 21.0
     xs = {"H": 6.5, "V": 29.5, "E": 52.5}
     heads = {"H": "HAZARD", "V": "VULNERABILITY", "E": "EXPOSURE"}
-    tops = [66.0 - i * 13.5 for i in range(4)]
-    rows = ["INPUT", "PROCESSING", "INDEX", "CLASSES"]
-    content = {
-        "H": [("Eight open datasets", "SAI, BUI, LSI, CPI,\nFFI, RNI, SLRI, FHI"),
-              ("Weighted combination", "Normalisation to [0, 1]\nCascade weights"),
-              ("Hazard Index", "30 m surface; maximum\nwithin 125 m of each site"),
-              ("Hazard class", "Five classes\n(Multi-Otsu)")],
-        "V": [("Seven attributes", "Heritage status, Enclosure,\nShelter, Land Use, Elevation,\nDistance to Coast, Slope"),
-              ("Scoring", "Score 1 to 3 per attribute\n(Multi-Otsu for continuous)"),
-              ("Vulnerability Index", "Mean score,\nrescaled to [0, 1]"),
-              ("Vulnerability class", "Three classes (Multi-Otsu),\nrescaled to 1, 3 and 5")],
-        "E": [("Google Places", "Review count\nof each site"),
-              ("Transformation", "Logarithm of the\nreview count"),
-              ("Exposure Index", "Rescaled to [0, 1]"),
-              ("Exposure class", "Five classes\n(Multi-Otsu)")],
+    # grid row -> (title, detail); rows: 0 input, 1-2 processing, 3-4 index, 5-6 classes. Missing rows stay empty.
+    grid = {
+        "H": {0: ("8 factors", "SAI, BUI, LSI, CPI,\nFFI, RNI, SLRI, FHI"),
+              1: ("Redundancy check", "Pearson correlation\nand PCA"),
+              2: ("Cascade weighting", "Normalisation, correlation\nnetwork, propagation"),
+              3: ("Hazard map", "HI, 30 m surface"),
+              4: ("Extraction", "Maximum value within\n125 m of each site"),
+              5: ("HI class", "5 classes (Multi-Otsu on\nthe 34 site values)")},
+        "V": {0: ("7 attributes", "Heritage status, Enclosure,\nShelter, Land Use, Elevation,\nDistance to Coast, Slope"),
+              2: ("Scoring 1 to 3", "Multi-Otsu for the\ncontinuous ones"),
+              3: ("VI", "Mean score, rescaled\nto [0, 1]"),
+              5: ("VI class", "3 classes (Multi-Otsu)"),
+              6: ("Values 1, 3 and 5", "assigned to the 3 classes,\nbefore the final calculation")},
+        "E": {0: ("Cumulative Google Places\nreview counts", ""),
+              2: ("Log transformation", "Logarithm of the\nreview count"),
+              3: ("EI", "Normalisation to [0, 1]"),
+              5: ("EI class", "5 classes (Multi-Otsu)")},
     }
+    top = lambda i: top0 - i * pitch
     for key in "HVE":
         x = xs[key]
-        rbox(x, 69.0, cw, 5.0, dark[key], ec=dark[key])
-        ax.text(x + cw / 2, 71.5, heads[key], ha="center", va="center", fontsize=7.2, fontweight="bold", color="white", zorder=3)
-        for i, (ti, de) in enumerate(content[key]):
-            stage(x, tops[i] - bh, cw, bh, key, ti, de)
-            if i < 3:
-                arrow(x + cw / 2, tops[i] - bh, x + cw / 2, tops[i + 1] + 0.1)
-    for i, r in enumerate(rows):
-        ax.text(3.3, tops[i] - bh / 2, r, rotation=90, ha="center", va="center", fontsize=5.8, color="#666666", fontweight="bold")
-    # separators between the three indices and the sensitivity panel
-    ax.plot([76.0, 76.0], [9.5, 74.0], color="#BBBBBB", lw=0.6, ls=":", zorder=0)
-    # risk
-    rbox(12.0, 1.0, 56.0, 8.2, tint["R"], ec=dark["R"], lw=0.9)
-    ax.text(40.0, 6.6, "Risk = Hazard class  ×  Vulnerability class  ×  Exposure class", ha="center", va="center",
+        rbox(x, hdr_y, cw, 5.0, dark)
+        ax.text(x + cw / 2, hdr_y + 2.5, heads[key], ha="center", va="center", fontsize=7.2, fontweight="bold", color="white", zorder=3)
+        rows = sorted(grid[key])
+        for i in rows:
+            stage(x, top(i) - bh, cw, bh, *grid[key][i])
+        for a, b in zip(rows[:-1], rows[1:]):
+            arrow(x + cw / 2, top(a) - bh, x + cw / 2, top(b) + 0.1)
+        arrow(x + cw / 2, top(rows[-1]) - bh, x + cw / 2, 1.5 + ri_h + 5.5 + ri_h + 0.1)
+    for label, (a, b) in (("INPUT", (0, 0)), ("PROCESSING", (1, 2)), ("INDEX", (3, 4)), ("CLASSES", (5, 6))):
+        ax.text(3.3, (top(a) + top(b) - bh) / 2, label, rotation=90, ha="center", va="center", fontsize=5.8, color="#666666", fontweight="bold")
+    ax.plot([76.0, 76.0], [1.5, hdr_y + 5.0], color="#BBBBBB", lw=0.6, ls=":", zorder=0)
+    # risk: two boxes in sequence
+    y1 = 1.5 + ri_h + 5.5
+    rbox(12.0, y1, 56.0, ri_h, tint["R"], lw=0.9)
+    ax.text(40.0, y1 + ri_h / 2, "RI = HI class  ×  VI class (1, 3, 5)  ×  EI class", ha="center", va="center",
             fontsize=7.0, fontweight="bold", zorder=3)
-    ax.text(40.0, 3.4, "Three classes (Multi-Otsu): Low, Medium, High", ha="center", va="center", fontsize=6.2, zorder=3)
-    for key in "HVE":
-        arrow(xs[key] + cw / 2, tops[3] - bh, xs[key] + cw / 2, 9.3)
+    rbox(12.0, 1.5, 56.0, ri_h, tint["R"], lw=0.9)
+    ax.text(40.0, 1.5 + ri_h / 2, f"Classification of RI into Low, Medium and High {RISK_WORD}\n(Multi-Otsu, 3 classes)",
+            ha="center", va="center", fontsize=6.4, zorder=3, linespacing=1.35)
+    arrow(40.0, y1, 40.0, 1.5 + ri_h + 0.1)
     # sensitivity panel
     sx, sw = 78.0, 21.5
-    rbox(sx, 69.0, sw, 5.0, dark["S"], ec=dark["S"])
-    ax.text(sx + sw / 2, 71.5, "SENSITIVITY ANALYSES", ha="center", va="center", fontsize=6.8, fontweight="bold", color="white", zorder=3)
-    tests = [("Weights", ["One-at-a-time, ±20%", "32 weight vectors"]),
-             ("Vulnerability", ["Site polygon", "No Enclosure and Shelter", "Fixed thresholds"]),
-             ("Aggregation", ["Product of indices", "Mean rank"]),
-             ("Coastal inputs", ["Without CPI", "Also without Distance\nto Coast", "Also without Elevation"])]
-    hts = [11.0, 14.0, 11.0, 17.0]
-    y = 66.0
-    for (ti, items), h in zip(tests, hts):
-        rbox(sx, y - h, sw, h, tint["S"], ec=dark["S"], ls="--", lw=0.6)
+    rbox(sx, hdr_y, sw, 5.0, dark)
+    ax.text(sx + sw / 2, hdr_y + 2.5, "SENSITIVITY ANALYSES", ha="center", va="center", fontsize=6.8, fontweight="bold", color="white", zorder=3)
+    ax.text(sx + 0.4, top0 + 0.3, f"The tests examine changes in\nthe individual indices and in\nthe final {RISK_WORD} classes",
+            ha="left", va="top", fontsize=5.9, style="italic", linespacing=1.3, zorder=3)
+    tests = [("Weights, Hazard map", [["320 weight perturbations", "(one-at-a-time, ±20%)"]]),
+             ("Weights, sites", [["32 weight scenarios"]]),
+             ("Vulnerability", [["Site polygon"], ["No Enclosure and Shelter"], ["Fixed thresholds"]]),
+             ("Aggregation", [["Product of indices"], ["Mean rank"]]),
+             ("Coastal inputs", [["Without CPI"], ["Also without Distance", "to Coast"], ["Also without Elevation"]])]
+    y = top0 - 7.0
+    for ti, items in tests:
+        h = 5.4 + sum(len(it) * 1.7 + 1.4 for it in items) - 0.2
+        rbox(sx, y - h, sw, h, tint["S"], ls="--", lw=0.6)
         ax.text(sx + 1.6, y - 2.6, ti, ha="left", va="center", fontsize=6.8, fontweight="bold", zorder=3)
-        yy = y - 5.6
+        yy = y - 4.9
         for it in items:
-            nl = it.count("\n") + 1
-            ax.text(sx + 1.6, yy + 1.1, "•  " + it.replace("\n", "\n    "), ha="left", va="top",
-                    fontsize=6.0, zorder=3, linespacing=1.25)
-            yy -= 3.1 + (nl - 1) * 2.3
+            ax.text(sx + 1.6, yy, "•  " + "\n    ".join(it), ha="left", va="top", fontsize=6.0, zorder=3, linespacing=1.25)
+            yy -= len(it) * 1.7 + 1.4
         y -= h + 2.2
-    ax.plot([sx + sw / 2, sx + sw / 2], [y + 2.2, 4.8], color="#555555", lw=0.8, ls=(0, (3, 2)), zorder=1)
-    arrow(sx + sw / 2, 4.8, 68.2, 4.8, ls=(0, (3, 2)), color="#555555")
+    ax.plot([sx + sw / 2, sx + sw / 2], [y + 2.2, 1.5 + ri_h / 2], color="#555555", lw=0.8, ls=(0, (3, 2)), zorder=1)
+    arrow(sx + sw / 2, 1.5 + ri_h / 2, 68.2, 1.5 + ri_h / 2, ls=(0, (3, 2)), color="#555555")
     save(fig, "Fig02_workflow")
- 
- 
+
+
 # ============================================================================ FIG 4: Hazard Index maps
 def read_raster(path, step_target=3200):
     import rasterio
@@ -421,12 +437,12 @@ def fig4():
     # colourbar and legend, right
     cax = fig.add_axes([left + wmap + 0.04, 0.62, 0.022, 0.28])
     cb = fig.colorbar(im1, cax=cax)
-    cb.set_label("Hazard Index", fontsize=7)
+    cb.set_label("HI", fontsize=7)
     cb.ax.tick_params(labelsize=6, length=2)
     hs = [Patch(fc=CLASS5[i], ec=EDGE, lw=0.4, label=f"{LABEL5[i]}") for i in range(5, 0, -1)]
     hs.append(Line2D([0], [0], marker="o", lw=0, mfc="white", mec="black", ms=4.5, label="Site"))
     fig.legend(handles=hs, loc="center left", bbox_to_anchor=(left + wmap + 0.03, 0.27), frameon=False,
-               title="Hazard class", fontsize=7, title_fontsize=7, alignment="left")
+               title="HI class", fontsize=7, title_fontsize=7, alignment="left")
     save(fig, "Fig04_Hazard_Index")
  
  
@@ -494,10 +510,10 @@ def fig6():
     ax.set_ylim(-0.7, n + 3.4)
     ax.axis("off")
     xcols = [0.0, 1.0, 2.0, 3.0]
-    heads = ["Hazard", "Vulnerability", "Exposure", "Risk"]
+    heads = ["HI class", "VI class", "EI class", "RI class"]
     for x, h in zip(xcols, heads):
         ax.text(x + 0.45, n - 0.1, h, rotation=50, ha="left", va="bottom", fontsize=7)
-    ax.text(4.4, n - 0.1, "Risk value (R)", ha="left", va="bottom", fontsize=7)
+    ax.text(4.4, n - 0.1, "RI value", ha="left", va="bottom", fontsize=7)
     for i, r in s.iterrows():
         y = n - 1 - i
         tiles = [(r.Hc, CLASS5, LABEL5[r.Hc]), (r.Vc, CLASS3, LABEL3[r.Vc]), (r.Ec, CLASS5, LABEL5[r.Ec]), (r.Rc, CLASS3, LABEL3[r.Rc])]
@@ -515,7 +531,7 @@ def fig6():
     for k in (3, 2, 1):
         idx = s.index[s.Rc == k]
         ymid = n - 1 - (idx.min() + idx.max()) / 2
-        ax.text(8.55, ymid, f"{LABEL3[k]} Risk\n({len(idx)} sites)", ha="right", va="center", fontsize=6.6,
+        ax.text(8.55, ymid, f"{LABEL3[k]} {RISK_WORD}\n({len(idx)} sites)", ha="right", va="center", fontsize=6.6,
                 color="black", rotation=0, bbox=dict(fc="white", ec=CLASS3[k], lw=1.0, boxstyle="round,pad=0.25"))
     save(fig, "Fig06_Ranking_matrix")
  
@@ -555,9 +571,9 @@ def fig5():
                      frameon=False, fontsize=6.4, handletextpad=0.2, columnspacing=0.8)
     for k, lab in zip("VER", ("(a) Vulnerability", "(b) Exposure", "(c) Risk")):
         pass
-    panel_label(axes["V"], "(a) Vulnerability")
-    panel_label(axes["E"], "(b) Exposure")
-    panel_label(axes["R"], "(c) Risk")
+    panel_label(axes["V"], "(a) VI")
+    panel_label(axes["E"], "(b) EI")
+    panel_label(axes["R"], "(c) RI")
     # detail Paphos - Limassol
     hi = s[s.Rc == 3]
     x0, x1 = hi.x_utm36n.min() - 14000, hi.x_utm36n.max() + 22000
@@ -576,9 +592,9 @@ def fig5():
                    arrowprops=dict(arrowstyle="-", lw=0.5, color="#222222", shrinkA=0, shrinkB=3),
                    bbox=dict(boxstyle="round,pad=0.15", fc="white", ec="#BBBBBB", lw=0.4, alpha=0.95))
     scalebar(z, 20, frac=(0.60 + 1.0 / 6.8, 0.07))   # shifted 1.0 cm right (panel width 6.8 cm)
-    panel_label(z, "(d) Risk, Paphos and Limassol")
+    panel_label(z, "(d) RI, Paphos and Limassol")
     z.legend(handles=legend_handles(CLASS3, LABEL3, SIZE3), loc="upper center", bbox_to_anchor=(0.5, -0.1), ncol=3,
-             frameon=False, fontsize=6.4, handletextpad=0.2, columnspacing=0.8, title="Risk class", title_fontsize=6.4)
+             frameon=False, fontsize=6.4, handletextpad=0.2, columnspacing=0.8, title="RI class", title_fontsize=6.4)
     save(fig, "Fig05_V_E_R_maps")
  
  
@@ -649,7 +665,7 @@ def fig8():
         ax.plot(r.HI_rank_base, i, marker="o", mfc="white", mec="#222222", ms=3.6, mew=0.8, zorder=3)
         if r.n_r_changes_fixed > 0:
             ax.plot(r.HI_rank_max + 0.9, i, marker="D", mfc="white", mec="#111111", ms=4.4, mew=1.1, zorder=4)
-        ax.text(-0.9, i, f"R = {int(r.R_base)}", va="center", ha="left", fontsize=6.4, color="#444444")
+        ax.text(-0.9, i, f"RI = {int(r.R_base)}", va="center", ha="left", fontsize=6.4, color="#444444")
     for i in range(n - 1):
         if p.R_class_base[i] != p.R_class_base[i + 1]:
             ax.axhline(i + 0.5, color="#999999", lw=0.7, ls="--", zorder=1)
@@ -657,17 +673,17 @@ def fig8():
     ax.set_yticklabels(p["name"], fontsize=6.4)
     ax.set_xlim(36, -5)
     ax.set_xticks([1, 5, 10, 15, 20, 25, 30, 34])
-    ax.set_xlabel("Hazard rank of the site (1 = highest Hazard Index); sites grouped by Risk class")
+    ax.set_xlabel("HI rank of the site (1 = highest HI); sites grouped by RI class")
     ax.grid(axis="x", color="#dddddd", lw=0.5, zorder=0)
     for sp in ("top", "right", "left"):
         ax.spines[sp].set_visible(False)
     ax.tick_params(axis="y", length=0)
     ax.set_ylim(-0.8, n - 0.2)
-    hs = [Line2D([0], [0], color=CLASS3[k], lw=4.4, label=f"{LABEL3[k]} Risk") for k in (3, 2, 1)]
+    hs = [Line2D([0], [0], color=CLASS3[k], lw=4.4, label=f"{LABEL3[k]} {RISK_WORD}") for k in (3, 2, 1)]
     hs += [Line2D([0], [0], marker="o", mfc="white", mec="#222222", lw=0, ms=3.6, mew=0.8, label="Rank in the main analysis"),
            Line2D([0], [0], marker="D", mfc="white", mec="#111111", lw=0, ms=4.4, mew=1.1,
-                  label="Risk class changes in at least one\nscenario (original thresholds)")]
-    ax.legend(handles=hs, loc="upper left", frameon=False, fontsize=6.4)
+                  label="RI class changes in at least one\nscenario (original thresholds)")]
+    ax.legend(handles=hs, loc="upper left", frameon=False, fontsize=6.4, labelspacing=0.3, borderaxespad=0.2)
     fig.tight_layout()
     save(fig, "Fig08_OAT_rank_range")
  
@@ -691,6 +707,7 @@ def risk_tests():
     a = pd.read_csv(result("sensitivity", "aggregation_sites.csv")).set_index("id").loc[s.id]
     out = pd.DataFrame({"id": s.id, "name": s["name"]})
     out["Main analysis"] = s.Rc.values
+    out["Site polygon"] = v["site_polygon"].values
     out["No Enclosure, Shelter"] = v["no_enclosure_shelter"].values
     for k in (1, 2, 3):
         out[f"Fixed thresholds {k}"] = v[f"fixed_thresholds_{k}"].values
@@ -714,8 +731,9 @@ def fig9():
     tcols = [c for c in tab.columns if c not in ("id", "name") and not c.startswith("_")]
     n, nt = len(tab), len(tcols)
     rowh = 0.33
-    fig = plt.figure(figsize=(W_FULL, (n * rowh + 6.0) * CM))
-    ax = fig.add_axes([0.285, 1.6 / (n * rowh + 6.0), 0.69, (n * rowh + 3.9) / (n * rowh + 6.0)])
+    fig_h = n * rowh + 7.0   # cm; 1 cm more than the axes need, so the rotated headers keep a top margin
+    fig = plt.figure(figsize=(W_FULL, fig_h * CM))
+    ax = fig.add_axes([0.285, 1.6 / fig_h, 0.69, (n * rowh + 3.9) / fig_h])
     ncols_total = nt + 1.0 + 2 + 1.0 + (2 if INCLUDE_MEAN_RANK else 1)
     ax.set_xlim(-0.2, ncols_total + 0.6)
     ax.set_ylim(-2.8, n + 6.6)
@@ -764,8 +782,8 @@ def fig9():
     for i in range(n - 1):
         if s.loc[order[i], "Rc"] != s.loc[order[i + 1], "Rc"]:
             ax.plot([-0.1, ncols_total], [n - 1 - i - 0.5] * 2, color=GREY, lw=0.6, ls="--")
-    h3 = [Patch(fc=CLASS3[i], ec=EDGE, lw=0.4, label=f"{letters[i]}  {LABEL3[i]} Risk") for i in range(1, 4)]
-    h3 += [Patch(fc="#BDBDBD", ec=EDGE, lw=0.4, label="Weight scenarios with a Risk class change (of 32); thr. = thresholds"),
+    h3 = [Patch(fc=CLASS3[i], ec=EDGE, lw=0.4, label=f"{letters[i]}  {LABEL3[i]} {RISK_WORD}") for i in range(1, 4)]
+    h3 += [Patch(fc="#BDBDBD", ec=EDGE, lw=0.4, label="Weight scenarios with an RI class change (of 32); thr. = thresholds"),
            Line2D([0], [0], marker="o", lw=0, mfc="black", mec="black", ms=4, label="Among the five highest values")]
     fig.legend(handles=h3, loc="lower left", bbox_to_anchor=(0.05, 0.003), ncol=3, frameon=False, fontsize=6.4,
                columnspacing=1.2, handletextpad=0.5)
