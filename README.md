@@ -12,7 +12,7 @@ The framework computes four indices for each archaeological site:
 | **Hazard (H)** | 8 natural and anthropogenic factors, mapped over the whole island, that drive the physical degradation of archaeological remains | PCA pre-screening + cascade weighting (network centrality) |
 | **Vulnerability (V)** | intrinsic physical condition of each site, from 7 attributes | scores 1-3, equal-weight mean |
 | **Exposure (E)** | presence of visitors, as a proxy of the value at stake | Google Places review counts, log scale |
-| **Risk (R)** | combination of the three | R = H class x V class (1, 3, 5) x E class |
+| **Risk (R)** | combination of the three | R = H class x V class x E class |
 
 Every class is computed from the data with Multi-Otsu thresholding, which allows to build naturalbreaks with a data-driven approach. 
 
