@@ -9,18 +9,18 @@ The framework computes four indices for each archaeological site:
 
 | Index | What it measures | Method |
 |---|---|---|
-| **Hazard (H)** | 8 natural and anthropogenic factors over the whole island | PCA pre-screening + cascade weighting (network centrality) |
-| **Vulnerability (V)** | physical condition of the site, 7 attributes | scores 1-3, equal-weight mean |
-| **Exposure (E)** | presence of visitors | Google Places review counts, log scale |
+| **Hazard (H)** | 8 natural and anthropogenic factors, mapped over the whole island, that drive the physical degradation of archaeological remains | PCA pre-screening + cascade weighting (network centrality) |
+| **Vulnerability (V)** | intrinsic physical condition of each site, from 7 attributes | scores 1-3, equal-weight mean |
+| **Exposure (E)** | presence of visitors, as a proxy of the value at stake | Google Places review counts, log scale |
 | **Risk (R)** | combination of the three | R = H class x V class (1, 3, 5) x E class |
 
-Every class is computed from the data with Multi-Otsu thresholding: no threshold is written by hand.
+Every class is computed from the data with Multi-Otsu thresholding, which allows to build naturalbreaks with a data-driven approach. 
 
 ## Repository structure
 
 ```
 config/default.yaml          every path and parameter of the article (one place)
-src/coastline/               the package: functions, no hard-coded paths
+src/coastline/               the package: 
     config.py                reads the configuration
     hazard.py                PCA pre-screening, cascade weighting, Hazard Index
     vulnerability.py         raster sampling, scores, Vulnerability Index
@@ -28,7 +28,7 @@ src/coastline/               the package: functions, no hard-coded paths
     risk.py                  Risk Index
     classify.py              Multi-Otsu classification
     preprocess.py            raw datasets -> 8 normalized factors
-    sensitivity/             sensitivity analyses of Section 2.7
+    sensitivity/             sensitivity analyses 
     figures/paper.py         figures of the article
 scripts/                     the steps, run in order (each one is short)
     00_preprocess_factors.py   optional: rebuild the factors from raw data
