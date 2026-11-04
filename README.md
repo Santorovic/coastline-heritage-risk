@@ -14,7 +14,7 @@ The framework computes four indices for each archaeological site:
 | **Exposure (E)** | presence of visitors, as a proxy of the value at stake | Google Places review counts, log scale |
 | **Risk (R)** | combination of the three | R = H class x V class x E class |
 
-Every class is computed from the data with Multi-Otsu thresholding, which allows to build naturalbreaks with a data-driven approach. 
+Every class is computed from the data with Multi-Otsu thresholding, which places the class limits where the values separate best, with no threshold set by hand.
 
 ## Repository structure
 
