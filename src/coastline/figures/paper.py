@@ -4,27 +4,24 @@ One function per figure, numbered as in the article (Draft v3):
 
     fig2  workflow diagram
     fig3  cascade weights: correlation network and weights
-    fig4  Hazard Index, continuous and classified        (preview; the published map is made in ArcGIS Pro)
-    fig5  Vulnerability, Exposure and Risk classes        (preview; ArcGIS Pro)
+    fig4  Hazard Index, continuous and classified        (map preview)
+    fig5  Vulnerability, Exposure and Risk classes        (map preview)
     fig6  ranking of the 34 sites: H, V, E and Risk classes
-    fig7  OAT stability map, pixel level                  (preview; ArcGIS Pro)
+    fig7  OAT stability map, pixel level                  (map preview)
     fig8  OAT, Hazard rank range of the sites
     fig9  Risk class of each site under the sensitivity tests
-    ext   the eight normalized Hazard factors (Extended data Figure 1)
+    ext   the eight normalized Hazard factors (Extended data Figure 1, map preview)
 
 Inputs are the outputs of scripts 01-05 (results folder). Outputs:
     results/figures/<name>.png / .svg / .pdf   publication style (16 cm wide, 300 dpi)
-    results/figures/arcgis/<folder>/           layers for ArcGIS Pro + README with the symbology
 
 Class colours are the shared palette (green - yellow - red); every figure adds a second cue
 (class letter in the tile, symbol size) for readers with red-green colour blindness.
 """
 import os
 import math
-import shutil
 import argparse
 import warnings
-from pathlib import Path
 
 import numpy as np
 import pandas as pd
@@ -34,7 +31,6 @@ import matplotlib.pyplot as plt
 from matplotlib.patches import FancyBboxPatch, Rectangle, Patch
 from matplotlib.lines import Line2D
 from matplotlib.colors import LinearSegmentedColormap, ListedColormap
-from scipy.stats import spearmanr
 
 warnings.filterwarnings("ignore")
 
@@ -45,10 +41,9 @@ from ..config import load_config
 # ============================================================================ CONFIGURATION
 CFG = load_config()
 FIG_DIR = CFG.results_dir / "figures"
-MAPS_DIR = FIG_DIR / "arcgis"                      # layers and symbology notes for ArcGIS Pro
 UTM = CFG.crs
 ISLAND_BOX = (410000, 3800000, 670000, 3980000)      # Cyprus in UTM 36N (xmin, ymin, xmax, ymax)
-INCLUDE_MEAN_RANK = False    # mean-rank aggregation in fig9: off (see docs/VERIFICATION.md)
+INCLUDE_MEAN_RANK = False    # mean-rank aggregation in fig9: off
 
 
 def result(*parts):
@@ -96,13 +91,10 @@ def panel_label(ax, label, x=0.0, y=1.02):
     ax.text(x, y, label, transform=ax.transAxes, fontsize=9, fontweight="bold", va="bottom", ha="left")
  
  
-def save(fig, name, copy_to=None):
+def save(fig, name):
     FIG_DIR.mkdir(parents=True, exist_ok=True)
     for ext in ("png", "svg", "pdf"):
         fig.savefig(FIG_DIR / f"{name}.{ext}", dpi=300)
-    if copy_to is not None:
-        Path(copy_to).mkdir(parents=True, exist_ok=True)
-        shutil.copy(FIG_DIR / f"{name}.png", Path(copy_to) / f"{name}_preview.png")
     plt.close(fig)
     print(f"  figure saved: {FIG_DIR / (name + '.png')}")
  
@@ -147,7 +139,7 @@ def get_outline():
     """Island outline in UTM 36N. Built once from the EuroRegionalMap coastline and cached."""
     if os.environ.get("COASTLINE_NO_OUTLINE"):
         return None
-    cache = MAPS_DIR / "_common" / "Cyprus_outline.gpkg"
+    cache = FIG_DIR / "_cache" / "Cyprus_outline.gpkg"
     if cache.exists():
         return gpd.read_file(cache)
     gdf = None
@@ -173,9 +165,8 @@ def get_outline():
     if gdf is None or len(gdf) == 0:
         print("  no outline available: maps are drawn without island outline")
         return None
-    (MAPS_DIR / "_common").mkdir(parents=True, exist_ok=True)
+    cache.parent.mkdir(parents=True, exist_ok=True)
     gdf.to_file(cache, driver="GPKG")
-    gdf.to_file(MAPS_DIR / "_common" / "Cyprus_outline.shp")
     return gdf
  
  
@@ -192,7 +183,7 @@ GRID = "#CFCFCF"
  
  
 def base_map(ax, outline, extent):
-    """ArcGIS-like frame: off-white background, grey graticule, thin dark coastline, outward ticks."""
+    """Map frame: off-white background, grey graticule, thin dark coastline, outward ticks."""
     ax.set_facecolor(SEA)
     if outline is not None:
         outline.plot(ax=ax, facecolor=LAND, edgecolor="none", zorder=0.2)
@@ -244,7 +235,7 @@ def graticule(ax):
  
  
 def scalebar(ax, km=50, frac=(0.60, 0.07), north=False):
-    """Segmented black-and-white scale bar with 'Kilometers' below, as in ArcGIS Pro. Optional north arrow above."""
+    """Segmented black-and-white scale bar with 'Kilometers' below. Optional north arrow above."""
     x0, x1 = ax.get_xlim()
     y0, y1 = ax.get_ylim()
     sx, sy = x1 - x0, y1 - y0
@@ -286,39 +277,6 @@ def legend_handles(palette, labels, sizes, counts=None, title=None):
         hs.append(Line2D([0], [0], marker="o", lw=0, mfc=palette[k], mec=EDGE, mew=0.5,
                          ms=math.sqrt(sizes[k]), label=lab))
     return hs
- 
- 
-def write_sites_shp(folder):
-    s = sites_df()
-    g = gpd.GeoDataFrame({
-        "id": s.id, "name": s.name, "district": s.district,
-        "HI_val": s.HI.round(4), "HI_cls": s.Hc, "HI_lbl": s.Hc.map(LABEL5),
-        "VI_cls": s.Vc, "VI_lbl": s.Vc.map(LABEL3), "VI_resc": s.VI_resc,
-        "E_cls": s.Ec, "E_lbl": s.Ec.map(LABEL5), "reviews": s.reviews,
-        "R_val": s.R, "R_cls": s.Rc, "R_lbl": s.Rc.map(LABEL3),
-        "label": np.where(s.Rc == 3, s.name.map(short_name) + " (" + s.R.astype(str) + ")", ""),
-    }, geometry=gpd.points_from_xy(s.x_utm36n, s.y_utm36n), crs=UTM)
-    Path(folder).mkdir(parents=True, exist_ok=True)
-    g.to_file(Path(folder) / "Sites_HVER.shp")
- 
- 
-def copy_outline(folder):
-    out = get_outline()
-    if out is not None:
-        Path(folder).mkdir(parents=True, exist_ok=True)
-        out.to_file(Path(folder) / "Cyprus_outline.shp")
- 
- 
-def write_readme(folder, text):
-    Path(folder).mkdir(parents=True, exist_ok=True)
-    (Path(folder) / "README_ArcGIS.txt").write_text(text, encoding="utf-8")
- 
- 
-PALETTE_TXT = ("Palette (hex)\n  3 classes (Vulnerability, Risk): Low #1B9E77, Medium #F2C12E, High #D62F25\n"
-               "  5 classes (Hazard, Exposure): Very Low #1B9E77, Low #A6D96A, Medium #F2C12E, High #F58A2E, Very High #D62F25\n"
-               "  Outline of symbols and island: #333333 / #8C8C8C, land fill #F1F1EF\n"
-               "Layout: 16 cm wide, text Arial 8 pt, scale bar, north arrow, light graticule in degrees, legend outside the frame.\n"
-               "Export: PNG 300 dpi and PDF. The Python preview in Images\\Figures shows the target design.\n")
  
  
 # ============================================================================ FIG 2: workflow
@@ -424,27 +382,11 @@ def read_raster(path, step_target=3200):
  
 def fig4():
     set_style()
-    import rasterio
-    hi_tif = result("hazard", "hazard_index.tif")
-    a, ext, prof, k = read_raster(hi_tif)
+    a, ext, _, k = read_raster(result("hazard", "hazard_index.tif"))
     valid = np.isfinite(a)
-    cls, thr = mot(a[valid], 5)
+    cls, _ = mot(a[valid], 5)
     c = np.zeros(a.shape, "uint8")
     c[valid] = cls
-    counts = {i: float((cls == i).mean() * 100) for i in range(1, 6)}
-    folder = MAPS_DIR / "Fig04_Hazard"
-    folder.mkdir(parents=True, exist_ok=True)
-    p = prof.copy()
-    p.update(dtype="uint8", nodata=0, count=1, compress="lzw")
-    with rasterio.open(folder / "HI_classified_5.tif", "w", **p) as dst:
-        dst.write(c, 1)
-    (folder / "HI_thresholds.txt").write_text(
-        "Multi-Otsu thresholds of the Hazard Index surface (5 classes, valid pixels)\n" +
-        ", ".join(f"{t:.4f}" for t in thr) + "\n" +
-        "Share of pixels per class (%): " + ", ".join(f"{LABEL5[i]} {counts[i]:.1f}" for i in range(1, 6)) + "\n", encoding="utf-8")
-    write_sites_shp(folder)
-    copy_outline(folder)
-    shutil.copy(hi_tif, folder / hi_tif.name)
  
     s = sites_df()
     outline = get_outline()
@@ -485,15 +427,7 @@ def fig4():
     hs.append(Line2D([0], [0], marker="o", lw=0, mfc="white", mec="black", ms=4.5, label="Site"))
     fig.legend(handles=hs, loc="center left", bbox_to_anchor=(left + wmap + 0.03, 0.27), frameon=False,
                title="Hazard class", fontsize=7, title_fontsize=7, alignment="left")
-    save(fig, "Fig04_Hazard_Index", copy_to=folder)
-    (folder / "README_ArcGIS.txt").write_text(
-        "FIG 4 - Hazard Index, continuous (a) and classified (b)\n\n"
-        "Layers: hazard_index.tif (continuous), HI_classified_5.tif (classified, values 1-5, 0 = no data),\n"
-        "Sites_HVER.shp (fields HI_cls, HI_lbl), Cyprus_outline.shp.\n"
-        "Panel (a): stretch min-max, colour ramp with the five class colours as stops (see palette).\n"
-        "Panel (b): unique values 1-5 with the five class colours. Sites: fill = HI_cls, black outline, constant size.\n"
-        "Thresholds and class shares: HI_thresholds.txt. The two panels share extent and outline.\n\n" + PALETTE_TXT,
-        encoding="utf-8")
+    save(fig, "Fig04_Hazard_Index")
  
  
 # ============================================================================ FIG 3: cascade weights network
@@ -591,9 +525,6 @@ def fig5():
     set_style()
     s = sites_df()
     outline = get_outline()
-    folder = MAPS_DIR / "Fig05_VER"
-    write_sites_shp(folder)
-    copy_outline(folder)
     extent = island_extent(outline, s)
     ratio = (extent[3] - extent[2]) / (extent[1] - extent[0])
     pw = 6.8 * CM
@@ -648,15 +579,7 @@ def fig5():
     panel_label(z, "(d) Risk, Paphos and Limassol")
     z.legend(handles=legend_handles(CLASS3, LABEL3, SIZE3), loc="upper center", bbox_to_anchor=(0.5, -0.1), ncol=3,
              frameon=False, fontsize=6.4, handletextpad=0.2, columnspacing=0.8, title="Risk class", title_fontsize=6.4)
-    save(fig, "Fig05_V_E_R_maps", copy_to=folder)
-    write_readme(folder,
-                 "FIG 5 - Vulnerability (a), Exposure (b), Risk (c) and detail Paphos-Limassol (d)\n\n"
-                 "Layers: Sites_HVER.shp (VI_cls/VI_lbl, E_cls/E_lbl, R_cls/R_lbl, R_val, label), Cyprus_outline.shp.\n"
-                 "(a) Unique values on VI_cls, colours of the 3-class palette, symbol size 14/28/52 (points^2).\n"
-                 "(b) Unique values on E_cls, colours of the 5-class palette, symbol size 8/16/27/40/56.\n"
-                 "(c) Unique values on R_cls, 3-class palette, size 14/28/52, High drawn on top (symbol level drawing).\n"
-                 "(d) Same symbology as (c), size x1.5, extent around the five High sites, label field 'label' (name and R) for High only.\n"
-                 "Legends outside the frame with the class counts: V 10/7/17, E 3/10/10/8/3, R 17/12/5.\n\n" + PALETTE_TXT)
+    save(fig, "Fig05_V_E_R_maps")
  
  
 # ============================================================================ FIG 7: OAT stability map
@@ -666,39 +589,14 @@ def fig7():
     with rasterio.open(result("sensitivity", "oat_stability.tif")) as src:
         pct = src.read(1).astype("float32")
         pct[pct == src.nodata] = np.nan
-        prof = src.profile
         b = src.bounds
     valid = np.isfinite(pct)
-    n_scen = 320                                     # 8 factors x 40 perturbed weights
-    count = np.rint(pct[valid] * n_scen / 100).astype("uint16")
-    thr = pd.read_csv(result("hazard", "hazard_class_thresholds.csv"))["threshold"].values
-    folder = MAPS_DIR / "Fig07_OAT_stability"
-    folder.mkdir(parents=True, exist_ok=True)
-    brk = [0, 5, 20, 50]
     scl = np.zeros(valid.shape, "uint8")
     scl[valid] = 1 + np.digitize(pct[valid], [1e-9, 5, 20, 50], right=True)
-    cnt_r = np.zeros(valid.shape, "uint16")
-    cnt_r[valid] = count
-    p = prof.copy()
-    p.update(count=1, compress="lzw")
-    with rasterio.open(folder / "OAT_changes_count.tif", "w", **{**p, "dtype": "uint16", "nodata": 65535}) as dst:
-        out = np.full(valid.shape, 65535, "uint16")
-        out[valid] = count
-        dst.write(out, 1)
-    with rasterio.open(folder / "OAT_changes_percent.tif", "w", **{**p, "dtype": "float32", "nodata": -9999.0}) as dst:
-        dst.write(np.where(valid, pct, -9999.0).astype("float32"), 1)
-    with rasterio.open(folder / "OAT_stability_class.tif", "w", **{**p, "dtype": "uint8", "nodata": 0}) as dst:
-        dst.write(scl, 1)
-    write_sites_shp(folder)
-    copy_outline(folder)
     labels = ["Never", "Up to 5%", "5% to 20%", "20% to 50%", "More than 50%"]
     # scl: 1 = never (pct==0), 2..5 = classes of the digitize on [~0,5,20,50]
     shares = [100 * (scl[valid] == i).mean() for i in range(1, 6)]
-    (folder / "OAT_stability_summary.txt").write_text(
-        "Share of valid pixels by share of the %d perturbed scenarios in which the Hazard class changes\n" % n_scen +
-        "\n".join(f"  {l}: {v:.1f}%" for l, v in zip(labels, shares)) +
-        f"\nBase thresholds (Multi-Otsu, 5 classes): {np.round(thr, 4).tolist()}\n", encoding="utf-8")
-    pal = ["#9ECAE1", "#FFF3B0", "#FDB863", "#E66101", "#7F2704"]
+    pal =["#9ECAE1", "#FFF3B0", "#FDB863", "#E66101", "#7F2704"]
     s = sites_df()
     outline = get_outline()
     ext = (b.left, b.right, b.bottom, b.top)
@@ -733,15 +631,7 @@ def fig7():
     for sp in ("top", "right"):
         axb.spines[sp].set_visible(False)
     panel_label(axb, "(b)", x=-0.38, y=1.05)
-    save(fig, "Fig07_OAT_stability_map", copy_to=folder)
-    write_readme(folder,
-                 "FIG 7 - Stability of the Hazard class under the one-at-a-time weight perturbation (pixel level)\n\n"
-                 "Rasters: OAT_stability_class.tif (1 never, 2 up to 5 pct, 3 5-20 pct, 4 20-50 pct, 5 more than 50 pct of the %d perturbed scenarios),\n"
-                 "OAT_changes_percent.tif (continuous, percent of scenarios), OAT_changes_count.tif (number of scenarios).\n"
-                 "Base class thresholds are kept fixed in every scenario (as in the pixel-level analysis of the paper).\n"
-                 "Symbology of the class raster: unique values, colours #9ECAE1, #FFF3B0, #FDB863, #E66101, #7F2704\n"
-                 "(scala blu-giallo-arancio-marrone: blu = stabile, marrone = instabile). Sites: white fill, black outline.\n"
-                 "Class shares: OAT_stability_summary.txt.\n\n" % n_scen + PALETTE_TXT)
+    save(fig, "Fig07_OAT_stability_map")
  
  
 # ============================================================================ FIG 8: OAT, rank range
@@ -885,12 +775,8 @@ def fig9():
 # ============================================================================ EXTENDED DATA: eight factors
 def ext_factors():
     set_style()
-    import rasterio
     WEIGHTS = load_weights()
     paths = {c: CFG.input("factors", c) for c in CFG.factor_codes}
-    folder = MAPS_DIR / "ExtData_factors"
-    write_sites_shp(folder)
-    copy_outline(folder)
     s = sites_df()
     outline = get_outline()
     names = list(paths)
@@ -925,14 +811,7 @@ def ext_factors():
     cb = fig.colorbar(ims[0], cax=cax, orientation="horizontal", ticks=np.linspace(0, 1, 6))
     cb.set_label("Normalised factor value", fontsize=7)
     cb.ax.tick_params(labelsize=6, length=2)
-    save(fig, "ExtData_Hazard_factors", copy_to=folder)
-    lst = "\n".join(f"  {n}: {paths[n].name}" for n in names)
-    write_readme(folder,
-                 "EXTENDED DATA - the eight normalised Hazard factors (before propagation)\n\n"
-                 "Rasters (already normalised to [0, 1], 30 m):\n" + lst + "\n"
-                 "Symbology: the same continuous ramp YlGnBu, stretch fixed 0 to 1, no data transparent, for all eight panels.\n"
-                 "Layout: 2 columns x 4 rows, panel title '(a) SAI (weight 0.131)', shared colour bar at the bottom.\n"
-                 "Sites: small black dots (Sites_HVER.shp). Same extent and outline in all panels.\n\n" + PALETTE_TXT)
+    save(fig, "ExtData_Hazard_factors")
  
  
 # ============================================================================ COMMAND LINE

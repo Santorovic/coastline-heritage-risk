@@ -26,8 +26,7 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
-postgis = ["sqlalchemy>=2.0", "psycopg2-binary>=2.9"]   # scripts/export_postgis_layers.py
-google = ["googlemaps>=4.10"]                            # scripts/collect_google_reviews.py
+google = ["googlemaps>=4.10"]   # scripts/collect_google_reviews.py
 dev = ["pytest>=8"]
 
 [tool.setuptools.packages.find]

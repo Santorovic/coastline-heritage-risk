@@ -20,7 +20,7 @@ Every class is computed from the data with Multi-Otsu thresholding, which places
 
 ```
 config/default.yaml          every path and parameter of the article (one place)
-src/coastline/               the package: 
+src/coastline/               the package:
     config.py                reads the configuration
     hazard.py                PCA pre-screening, cascade weighting, Hazard Index
     vulnerability.py         raster sampling, scores, Vulnerability Index
@@ -28,16 +28,14 @@ src/coastline/               the package:
     risk.py                  Risk Index
     classify.py              Multi-Otsu classification
     preprocess.py            raw datasets -> 8 normalized factors
-    sensitivity/             sensitivity analyses 
+    sensitivity/             sensitivity analyses
     figures/paper.py         figures of the article
 scripts/                     the steps, run in order (each one is short)
     00_preprocess_factors.py   optional: rebuild the factors from raw data
     01_hazard_index.py ... 06_figures.py
     collect_google_reviews.py  optional: collect new review counts
-    export_postgis_layers.py   optional: export the PostGIS layers once
 data/sites/                  the 34 sites: points, polygons, attributes, review counts
 tests/                       unit tests + regression tests against the article
-docs/                        verification report, map from the article to the code
 ```
 
 ## Installation
@@ -63,8 +61,8 @@ attributes scored by photo-interpretation, the values read from the rasters and
 the review counts. The 8 normalized Hazard factors (about 130 MB) are archived
 on Zenodo: download them into `data/factors/` (see [data/README.md](data/README.md)).
 
-To use data stored elsewhere, copy `config/local.example.yaml` to
-`config/local.yaml` and write your paths there, or set `COASTLINE_DATA_DIR`.
+To use data stored elsewhere, create `config/local.yaml` (ignored by Git) with only
+the values that differ on your computer, or set `COASTLINE_DATA_DIR`.
 
 ## Run
 
@@ -80,8 +78,7 @@ pytest -q                                 # checks that the results equal the ar
 
 Outputs are written to `results/`. Script 05 accepts `--parts` to run one analysis
 (e.g. `--parts pixels sites`) and `--skip-polygon` if the DEM, slope and WorldCover
-rasters are not available. Maps of the article are finished in ArcGIS Pro: script 06
-writes previews and, in `results/figures/arcgis/`, the layers with their symbology.
+rasters are not available. The maps written by script 06 are previews.
 
 ## From the article to the code
 
@@ -99,9 +96,6 @@ writes previews and, in `results/figures/arcgis/`, the layers with their symbolo
 | Vulnerability tests, Figure 9 | `sensitivity/vulnerability.py` | `results/sensitivity/vulnerability_tests*.csv` |
 | Aggregation of the Risk Index | `sensitivity/aggregation.py` | `results/sensitivity/aggregation*.csv` |
 | Coastal inputs | `sensitivity/coastal.py` | `results/sensitivity/coastal_tests*.csv` |
-
-[docs/VERIFICATION.md](docs/VERIFICATION.md) lists the checks against the
-article and the points where the text and the code differ.
 
 ## Citation
 

@@ -4,7 +4,7 @@
 
 | File | Content | Source / licence |
 |---|---|---|
-| `site_points.geojson` | 34 site points: `id`, `name`, `district` (EPSG:32636) | derived from OpenStreetMap, (c) OpenStreetMap contributors, ODbL |
+| `site_points.geojson` | 34 site points: `id`, `name`, `district` (WGS 84, EPSG:4326) | derived from OpenStreetMap, (c) OpenStreetMap contributors, ODbL |
 | `site_polygons.geojson` | site footprints, matched to the points (nearest polygon within 300 m) | OpenStreetMap, ODbL |
 | `site_attributes.csv` | Heritage status, Enclosure, Shelter | UNESCO World Heritage List; photo-interpretation of Google Maps / Google Earth Pro imagery (2026) |
 | `site_raster_values.csv` | Land Use (WorldCover code), elevation (m), slope (deg), distance to coast (m) at each point | output of `scripts/02_vulnerability_index.py --sample-rasters` |
@@ -45,3 +45,6 @@ raster values of the sites. Download them from the providers:
 | Elevation, Slope | SRTM Global 1 arc-second v3 | NASA JPL / LP DAAC |
 
 Expected file names and folders are listed under `inputs` in `config/default.yaml`.
+The vector layers (boundary, coastline polygon, roads, rivers, burned areas) were
+stored in PostGIS: export the PostGIS layers to the GeoPackage files listed under
+inputs.

@@ -8,11 +8,11 @@ Each factor is built in two steps, as in the original analysis:
    cells without a value inside the island set to 0, land mask applied.
 
 The vector inputs (boundary, coastline polygon, roads, rivers, burned areas) were
-stored in PostGIS; ``scripts/export_postgis_layers.py`` exports them once to
-GeoPackage files so that this module runs without a database.
+stored in PostGIS: export the PostGIS layers to the GeoPackage files listed under
+inputs (config/default.yaml), so that this module runs without a database.
 
 Note: the 8 aligned factors used in the article are archived as underlying data.
-They are the authoritative inputs of scripts 01-06 (see docs/VERIFICATION.md).
+They are the authoritative inputs of scripts 01-06.
 """
 from __future__ import annotations
 
@@ -118,7 +118,7 @@ def landslide(cfg) -> tuple[np.ndarray, dict]:
     """LSI: ELSUS v2, 5 ordinal classes -> 0, 0.25, 0.5, 0.75, 1 (Eq. 4).
 
     The original script resamples the 200 m classes to ~30 m with bilinear
-    interpolation (the Methods text says nearest neighbour: see docs/VERIFICATION.md).
+    interpolation (the Methods text says nearest neighbour).
     """
     res = cfg["preprocess"]["resolution_m"]
     with rasterio.open(cfg.input("elsus")) as src:
